@@ -42,7 +42,6 @@
                         <option value="5">5x (5 Kg)</option>
                         <option value="custom">Lainnya...</option>
                     </select>
-                    <!-- Custom Input (Hidden by default) -->
                     <input type="number" id="customScaleInput" placeholder="Contoh: 0.5" class="hidden w-20 bg-slate-900 text-white text-xs p-1.5 rounded border border-slate-600 outline-none focus:border-indigo-500 text-center" step="0.1" min="0.1">
                 </div>
 
@@ -64,22 +63,24 @@
                 </div>
             </div>
 
-            <!-- STATS CARDS -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <!-- Card 1 -->
-                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 relative overflow-hidden group focus-within:border-emerald-500/50 transition-colors">
-                    <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <i class="fas fa-cookie-bite text-4xl text-emerald-400"></i>
-                    </div>
+            <!-- STATS CARDS (Updated Layout: 4 Columns) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                <!-- Card 1: Yield -->
+                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 relative overflow-hidden group hover:border-emerald-500/30 transition-colors">
                     <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Estimasi Jadi</p>
                     <div class="flex items-baseline mt-1">
                         <span id="displayYield" class="text-2xl font-bold text-emerald-400 mr-2">0</span>
                         <span class="text-xs text-slate-500 font-bold">Pcs</span>
-                        <span class="text-[10px] text-slate-600 ml-2">(Basis 1kg: <span id="baseYieldDisplay">130</span>)</span>
+                    </div>
+                    <!-- Editable Base Yield -->
+                    <div class="mt-1 flex items-center gap-1 text-[10px] text-slate-500 bg-slate-900/50 p-1 rounded w-fit">
+                        <span>Basis 1kg:</span>
+                        <input type="number" id="baseYieldInput" class="w-10 bg-transparent text-emerald-300 font-bold outline-none border-b border-slate-600 focus:border-emerald-500 text-center p-0" value="130">
+                        <span>pcs</span>
                     </div>
                 </div>
 
-                <!-- Card 2 -->
+                <!-- Card 2: Modal -->
                 <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 relative overflow-hidden">
                     <div class="absolute top-0 right-0 p-3 opacity-10">
                         <i class="fas fa-wallet text-4xl text-blue-400"></i>
@@ -88,13 +89,30 @@
                     <h2 class="text-2xl font-bold text-slate-200 mono mt-1" id="displayTotalCost">Rp 0</h2>
                 </div>
 
-                <!-- Card 3 -->
-                <div class="bg-gradient-to-br from-indigo-900/80 to-slate-900 p-3 rounded-lg border border-indigo-500/30 relative overflow-hidden shadow-lg shadow-indigo-900/10">
-                    <div class="absolute top-0 right-0 p-3 opacity-20">
-                        <i class="fas fa-tag text-4xl text-indigo-300"></i>
+                <!-- Card 3: Harga Jual & HPP -->
+                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 relative overflow-hidden group focus-within:border-indigo-500/50 transition-colors">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Harga Jual /pcs</p>
+                            <div class="flex items-center gap-1 mt-1">
+                                <span class="text-slate-500 text-xs">Rp</span>
+                                <input type="number" id="sellingPriceInput" class="bg-transparent text-xl font-bold text-white w-20 outline-none border-b border-slate-600 focus:border-indigo-500 transition-all" value="1000">
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-[9px] text-indigo-400 font-bold mb-0.5">HPP:</p>
+                            <span class="text-sm font-mono text-slate-300" id="displayHppPcs">Rp 0</span>
+                        </div>
                     </div>
-                    <p class="text-[10px] text-indigo-300 uppercase tracking-wider font-semibold">HPP Per Pcs</p>
-                    <h2 class="text-3xl font-bold text-white mono mt-0 leading-tight" id="displayHppPcs">Rp 0</h2>
+                </div>
+
+                <!-- Card 4: Profit (NEW) -->
+                <div class="bg-gradient-to-br from-emerald-900/40 to-slate-900 p-3 rounded-lg border border-emerald-500/30 relative overflow-hidden shadow-lg shadow-emerald-900/10">
+                    <div class="absolute top-0 right-0 p-3 opacity-20">
+                        <i class="fas fa-coins text-4xl text-emerald-300"></i>
+                    </div>
+                    <p class="text-[10px] text-emerald-300 uppercase tracking-wider font-semibold">Estimasi Profit</p>
+                    <h2 class="text-2xl font-bold text-white mono mt-1 leading-tight" id="displayProfit">Rp 0</h2>
                 </div>
             </div>
         </div>
@@ -169,7 +187,7 @@
                     
                     <div class="flex-none p-4 bg-slate-900 border-t border-slate-800 text-[10px] text-slate-600 text-center flex flex-col gap-1">
                         <span>Aplikasi Kalkulator HPP Pukis Pro</span>
-                        <span class="text-slate-700">Versi Modular 1.1 • Fix Input Modal</span>
+                        <span class="text-slate-700">Versi Modular 1.2 • Profit & Editable Yield</span>
                     </div>
                 </div>
             </div>

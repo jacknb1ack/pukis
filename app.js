@@ -1,4 +1,4 @@
-/* --- FALLBACK DATA (Cadangan jika data.json gagal diload) --- */
+/* --- FALLBACK DATA --- */
 const FALLBACK_DATA = {
   "ingredients": [
     { "category": "Bahan Utama", "name": "Terigu", "brand": "Segitiga Curah", "buyPrice": 9500, "buyWeight": 1000, "usage": 1000 },
@@ -22,14 +22,7 @@ const FALLBACK_DATA = {
     { "name": "Sewa Lapak (Harian)", "cost": 15000 },
     { "name": "Packing (Estimasi Harian)", "cost": 10000 }
   ],
-  "steps": [
-    "Persiapan santan, campur 500gram kelapa dengan sedikit air panas, lalu peras. tambahkan air sisanya lalu peras, rebus sampai mendidih sambil diaduk dan biarkan hingga suhu ruang",
-    "Campur adonan kering (terigu, ragi, vanili, bread improver)",
-    "Lelehkan margarin sampai meleleh, tidak sampai bening",
-    "Campur Gula pasir, telur dan emulsifier, lalu mix dengan kecepatan tinggi sampai berjejak",
-    "Tambahkan campuran kering dan santan bergantian secara bertahap (3x)",
-    "Tambahkan margarin cair, lalu mix sekitar 10 detik, lalu aduk manual dengan teknik balik"
-  ],
+  "steps": [],
   "baseYield": 130
 };
 
@@ -39,25 +32,23 @@ let ops = [];
 let steps = [];
 let baseYield = 130;
 let currentMultiplier = 1;
+let sellingPrice = 1000; // Default harga jual
 
-/* --- EGG LOGIC (Special Rules) --- */
+/* --- EGG LOGIC --- */
 function getEggQty(type, multiplier) {
     const isAyam = type.toLowerCase().includes('ayam');
     const isBebek = type.toLowerCase().includes('bebek');
     
-    // Jika custom/lainnya, gunakan pembulatan ke atas dari rasio dasar
     if (![1, 1.25, 1.5, 2].includes(multiplier)) {
         const base = isAyam ? 3 : (isBebek ? 1 : 0);
         return Math.ceil(base * multiplier);
     }
 
-    // Rules Spesifik
     if (multiplier === 1) return isAyam ? 3 : 1;
     if (multiplier === 1.25) return isAyam ? 4 : 1;
     if (multiplier === 1.5) return isAyam ? 4 : 2;
     if (multiplier === 2) return isAyam ? 6 : 2;
 
-    // Fallback umum
     const base = isAyam ? 3 : 1;
     return Math.ceil(base * multiplier);
 }
@@ -67,7 +58,6 @@ const toIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', curre
 
 /* --- INIT & DATA LOADING --- */
 async function init() {
-    // Coba load dari LocalStorage dulu
     const localIng = localStorage.getItem('pukisMod_ing');
     
     if (localIng) {
@@ -75,17 +65,16 @@ async function init() {
         ops = JSON.parse(localStorage.getItem('pukisMod_ops') || '[]');
         steps = JSON.parse(localStorage.getItem('pukisMod_steps') || '[]');
         baseYield = parseFloat(localStorage.getItem('pukisMod_yield') || '130');
+        sellingPrice = parseFloat(localStorage.getItem('pukisMod_price') || '1000');
         render();
     } else {
-        // PERBAIKAN: Gunakan cache busting (?t=...) agar browser selalu ambil file terbaru
-        // Pastikan nama file lokal Anda adalah 'data.json'
         try {
             const response = await fetch('data.json?t=' + new Date().getTime());
             if (!response.ok) throw new Error("Status " + response.status);
             const data = await response.json();
             loadData(data);
         } catch (error) {
-            console.warn("Gagal load data.json (Menggunakan Data Fallback):", error);
+            console.warn("Gagal load data.json (Fallback):", error);
             loadData(FALLBACK_DATA);
         }
     }
@@ -95,10 +84,8 @@ function loadData(data) {
     ingredients = data.ingredients || [];
     ops = data.ops || [];
     steps = data.steps || [];
-    
-    // PERBAIKAN: Support format 'yieldPcs' (file Anda) dan 'baseYield' (format saya)
-    // ParseFloat untuk memastikan jadi angka, bukan string
     baseYield = parseFloat(data.baseYield || data.yieldPcs || 130);
+    sellingPrice = 1000; // Reset price on load default
     
     saveToLocal(); 
     render();
@@ -109,9 +96,10 @@ function saveToLocal() {
     localStorage.setItem('pukisMod_ops', JSON.stringify(ops));
     localStorage.setItem('pukisMod_steps', JSON.stringify(steps));
     localStorage.setItem('pukisMod_yield', baseYield.toString());
+    localStorage.setItem('pukisMod_price', sellingPrice.toString());
 }
 
-/* --- RENDERING & CALCULATION --- */
+/* --- RENDERING --- */
 function render() {
     const scaleSelect = document.getElementById('scaleSelect');
     const customInput = document.getElementById('customScaleInput');
@@ -123,6 +111,10 @@ function render() {
         customInput.classList.add('hidden');
         currentMultiplier = parseFloat(scaleSelect.value);
     }
+
+    // Set value ke input field
+    document.getElementById('baseYieldInput').value = baseYield;
+    document.getElementById('sellingPriceInput').value = sellingPrice;
 
     renderIngredients();
     renderOps();
@@ -238,19 +230,50 @@ function renderSteps() {
 }
 
 function renderSummary() {
+    // 1. Yield & Cost
     const currentYield = Math.floor(baseYield * currentMultiplier);
     const totalCost = (window.tempTotalIngCost || 0) + (window.tempTotalOpsCost || 0);
     const hppPerPcs = currentYield > 0 ? totalCost / currentYield : 0;
 
+    // 2. Profit Calc
+    const revenue = currentYield * sellingPrice;
+    const profit = revenue - totalCost;
+
+    // 3. Display
     document.getElementById('displayYield').innerText = currentYield;
-    document.getElementById('baseYieldDisplay').innerText = baseYield;
+    // Base yield input handle by own listener
+    
     document.getElementById('displayTotalCost').innerText = toIDR(totalCost);
     document.getElementById('displayHppPcs').innerText = toIDR(hppPerPcs);
+
+    const elProfit = document.getElementById('displayProfit');
+    elProfit.innerText = toIDR(profit);
+    if(profit >= 0) {
+        elProfit.classList.remove('text-red-400');
+        elProfit.classList.add('text-white');
+    } else {
+        elProfit.classList.add('text-red-400');
+        elProfit.classList.remove('text-white');
+    }
 }
 
 /* --- EVENT HANDLERS --- */
 document.getElementById('scaleSelect').addEventListener('change', render);
 document.getElementById('customScaleInput').addEventListener('input', render);
+
+// Listener untuk Base Yield & Selling Price
+document.getElementById('baseYieldInput').addEventListener('input', function() {
+    baseYield = parseFloat(this.value) || 0;
+    saveToLocal();
+    renderSummary(); // Cukup update summary, tidak perlu render ulang semua list
+});
+
+document.getElementById('sellingPriceInput').addEventListener('input', function() {
+    sellingPrice = parseFloat(this.value) || 0;
+    saveToLocal();
+    renderSummary();
+});
+
 
 document.getElementById('btnAddOps').addEventListener('click', () => {
     const name = document.getElementById('newOpsName').value;
@@ -284,29 +307,23 @@ window.openModal = function(idx) {
     const btnDelete = document.getElementById('btnDelete');
     
     if (idx !== 'new') {
-        // --- MODE EDIT ---
         const item = ingredients[idx];
         document.getElementById('modalCategory').value = item.category || 'Bahan Utama';
         document.getElementById('modalName').value = item.name;
         document.getElementById('modalBrand').value = item.brand || '';
         document.getElementById('modalPrice').value = item.buyPrice;
         document.getElementById('modalWeight').value = item.buyWeight;
-        
-        // Load usage yang sudah ada ke input modal
         document.getElementById('modalUsage').value = item.usage;
 
         idxInput.value = idx;
         btnDelete.classList.remove('hidden');
         updateModalCalc();
     } else {
-        // --- MODE TAMBAH BARU ---
         document.getElementById('modalCategory').value = 'Bahan Utama';
         document.getElementById('modalName').value = '';
         document.getElementById('modalBrand').value = '';
         document.getElementById('modalPrice').value = '';
         document.getElementById('modalWeight').value = '';
-        
-        // Reset Usage Input ke Kosong
         document.getElementById('modalUsage').value = '';
 
         idxInput.value = 'new';
@@ -326,13 +343,10 @@ document.getElementById('btnSaveModal').addEventListener('click', () => {
         brand: document.getElementById('modalBrand').value,
         buyPrice: parseFloat(document.getElementById('modalPrice').value),
         buyWeight: parseFloat(document.getElementById('modalWeight').value),
-        usage: 0 
+        usage: parseFloat(document.getElementById('modalUsage').value) || 0
     };
 
     if (!newItem.name || isNaN(newItem.buyPrice)) return alert('Lengkapi data!');
-
-    // PERBAIKAN: HAPUS PROMPT, ambil langsung dari input Modal
-    newItem.usage = parseFloat(document.getElementById('modalUsage').value) || 0;
 
     if (idx === 'new') {
         ingredients.push(newItem);
@@ -361,12 +375,12 @@ function updateModalCalc() {
 ['modalPrice', 'modalWeight'].forEach(id => document.getElementById(id).addEventListener('input', updateModalCalc));
 
 document.getElementById('btnReset').addEventListener('click', () => {
-    // PERBAIKAN: Reset logic yang benar adalah menghapus LocalStorage agar init() berjalan ulang
-    if(confirm('Reset ke data awal 1kg? Data kustom akan hilang.')) {
+    if(confirm('Reset ke data awal 1kg?')) {
         localStorage.removeItem('pukisMod_ing');
         localStorage.removeItem('pukisMod_ops');
         localStorage.removeItem('pukisMod_steps');
         localStorage.removeItem('pukisMod_yield');
+        localStorage.removeItem('pukisMod_price');
         location.reload();
     }
 });
@@ -382,7 +396,9 @@ document.getElementById('btnExportJson').addEventListener('click', () => {
 
 document.getElementById('btnExportCsv').addEventListener('click', () => {
     let csv = "DATA HPP PUKIS\n";
-    csv += `Skala Produksi,${currentMultiplier}x\n\n`;
+    csv += `Skala Produksi,${currentMultiplier}x\n`;
+    csv += `Harga Jual,${sellingPrice}\n`;
+    csv += `Estimasi Profit,${document.getElementById('displayProfit').innerText}\n\n`;
     csv += "BAHAN,PEMAKAIAN,BIAYA\n";
     
     ingredients.forEach(item => {
