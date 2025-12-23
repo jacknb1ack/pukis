@@ -1,0 +1,155 @@
+{
+  "ingredients": [
+    {
+      "category": "Bahan Utama",
+      "name": "Terigu",
+      "brand": "Segitiga Curah",
+      "buyPrice": 9500,
+      "buyWeight": 1000,
+      "usage": 1000
+    },
+    {
+      "category": "Bahan Utama",
+      "name": "Gula Pasir",
+      "brand": "Curah",
+      "buyPrice": 17000,
+      "buyWeight": 1000,
+      "usage": 550
+    },
+    {
+      "category": "Bahan Utama",
+      "name": "Kelapa",
+      "brand": "Parut",
+      "buyPrice": 34000,
+      "buyWeight": 1000,
+      "usage": 500
+    },
+    {
+      "category": "Bahan Utama",
+      "name": "Telur Ayam",
+      "brand": "",
+      "buyPrice": 1850,
+      "buyWeight": 1,
+      "usage": 3
+    },
+    {
+      "category": "Bahan Utama",
+      "name": "Telur Bebek",
+      "brand": "",
+      "buyPrice": 2000,
+      "buyWeight": 1,
+      "usage": 1
+    },
+    {
+      "category": "Bahan Tambahan",
+      "name": "Garam",
+      "brand": "Daun",
+      "buyPrice": 2500,
+      "buyWeight": 250,
+      "usage": 8
+    },
+    {
+      "category": "Bahan Tambahan",
+      "name": "Ragi",
+      "brand": "Mauripan",
+      "buyPrice": 48000,
+      "buyWeight": 500,
+      "usage": 4
+    },
+    {
+      "category": "Bahan Tambahan",
+      "name": "Bread Improver",
+      "brand": "Angel",
+      "buyPrice": 36000,
+      "buyWeight": 500,
+      "usage": 4
+    },
+    {
+      "category": "Bahan Tambahan",
+      "name": "Margarin Cake",
+      "brand": "Mother Choice",
+      "buyPrice": 30000,
+      "buyWeight": 1000,
+      "usage": 30
+    },
+    {
+      "category": "Bahan Tambahan",
+      "name": "BOS",
+      "brand": "Palmvita",
+      "buyPrice": 30000,
+      "buyWeight": 1000,
+      "usage": 30
+    },
+    {
+      "category": "Topping",
+      "name": "Keju",
+      "brand": "Wincheez",
+      "buyPrice": 92000,
+      "buyWeight": 2000,
+      "usage": 90
+    },
+    {
+      "category": "Topping",
+      "name": "Meses",
+      "brand": "Innova Hijau",
+      "buyPrice": 31000,
+      "buyWeight": 1000,
+      "usage": 120
+    },
+    {
+      "category": "Topping",
+      "name": "Margarin",
+      "brand": "Mother Choice",
+      "buyPrice": 30000,
+      "buyWeight": 1000,
+      "usage": 25
+    },
+    {
+      "category": "Topping",
+      "name": "B.O.S",
+      "brand": "Palmvita",
+      "buyPrice": 30000,
+      "buyWeight": 1000,
+      "usage": 25
+    },
+    {
+      "category": "Bahan Tambahan",
+      "name": "Emulsifier",
+      "brand": "SP",
+      "buyPrice": 50000,
+      "buyWeight": 1000,
+      "usage": 10
+    },
+    {
+      "category": "Lainnya",
+      "name": "GAS",
+      "brand": "LPG 3KG",
+      "buyPrice": 22000,
+      "buyWeight": 3000,
+      "usage": 150
+    },
+    {
+      "category": "Lainnya",
+      "name": "Packing",
+      "brand": "LUX / TOP",
+      "buyPrice": 3350,
+      "buyWeight": 1,
+      "usage": 1
+    }
+  ],
+  "ops": [
+    {
+      "name": "Sewa Lapak",
+      "cost": 5000
+    }
+  ],
+  "steps": [
+    "Persiapan santan, campur 500gram kelapa dengan sedikit air panas, lalu peras. tambahkan air sisanya lalu peras, rebus sampai mendidih sambil diaduk dan biarkan hingga suhu ruang",
+    "Campur adonan kering (terigu, ragi, vanili, bread improver)",
+    "Lelehkan margarin sampai meleleh, tidak sampai bening",
+    "Campur Gula pasir, telur dan emulsifier, lalu mix dengan kecepatan tinggi sampai berjejak",
+    "Tambahkan campuran kering dan santan bergantian secara bertahap (3x)",
+    "Tambahkan margarin cair, lalu mix sekitar 10 detik, lalu aduk manual dengan teknik balik"
+  ],
+  "baseYield": 130
+}

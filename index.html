@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalkulator HPP Pukis Pro (Modular)</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Icons & Fonts -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Local CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="min-h-screen p-2 md:p-6 flex justify-center bg-slate-950 items-start lg:items-center">
+
+    <!-- Hidden Input for Import -->
+    <input type="file" id="importFile" accept=".json" style="display:none">
+
+    <!-- MAIN CONTAINER -->
+    <div class="w-full max-w-7xl bg-slate-900 rounded-xl shadow-2xl border border-slate-800 flex flex-col h-auto lg:h-[90vh] overflow-hidden relative">
+        
+        <!-- HEADER -->
+        <div class="bg-slate-900 p-4 border-b border-slate-800 shadow-lg z-20 flex-none sticky top-0 lg:static">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                <div>
+                    <h1 class="text-xl font-bold text-white tracking-tight"><i class="fas fa-calculator text-indigo-500 mr-2"></i>HPP PUKIS PRO</h1>
+                    <p class="text-xs text-slate-400">Manajemen Biaya & Skala Produksi</p>
+                </div>
+                
+                <!-- Scaling Controls -->
+                <div class="flex items-center gap-2 bg-slate-800 p-1.5 rounded-lg border border-slate-700">
+                    <span class="text-xs font-bold text-slate-400 px-2 uppercase"><i class="fas fa-balance-scale mr-1"></i>Skala:</span>
+                    <select id="scaleSelect" class="bg-slate-900 text-white text-xs p-1.5 rounded border border-slate-600 outline-none focus:border-indigo-500">
+                        <option value="1">1x (1 Kg)</option>
+                        <option value="1.25">1.25x (1.25 Kg)</option>
+                        <option value="1.5">1.5x (1.5 Kg)</option>
+                        <option value="2">2x (2 Kg)</option>
+                        <option value="2.5">2.5x (2.5 Kg)</option>
+                        <option value="3">3x (3 Kg)</option>
+                        <option value="4">4x (4 Kg)</option>
+                        <option value="5">5x (5 Kg)</option>
+                        <option value="custom">Lainnya...</option>
+                    </select>
+                    <!-- Custom Input (Hidden by default) -->
+                    <input type="number" id="customScaleInput" placeholder="Contoh: 0.5" class="hidden w-20 bg-slate-900 text-white text-xs p-1.5 rounded border border-slate-600 outline-none focus:border-indigo-500 text-center" step="0.1" min="0.1">
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap gap-2">
+                    <button id="btnReset" class="text-xs bg-slate-800 hover:bg-red-900/30 text-slate-400 hover:text-red-400 px-3 py-1.5 rounded border border-slate-700 transition-colors" title="Reset ke Default">
+                        <i class="fas fa-trash-alt"></i> Reset
+                    </button>
+                    <div class="h-6 w-px bg-slate-700 mx-1"></div>
+                    <button onclick="document.getElementById('importFile').click()" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 px-3 py-1.5 rounded transition-colors">
+                        <i class="fas fa-file-upload mr-1"></i> Impor
+                    </button>
+                    <button id="btnExportJson" class="text-xs bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 px-3 py-1.5 rounded transition-colors">
+                        <i class="fas fa-file-code mr-1"></i> JSON
+                    </button>
+                    <button id="btnExportCsv" class="text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-3 py-1.5 rounded transition-colors shadow-lg shadow-emerald-500/20">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- STATS CARDS -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <!-- Card 1 -->
+                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 relative overflow-hidden group focus-within:border-emerald-500/50 transition-colors">
+                    <div class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <i class="fas fa-cookie-bite text-4xl text-emerald-400"></i>
+                    </div>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Estimasi Jadi</p>
+                    <div class="flex items-baseline mt-1">
+                        <span id="displayYield" class="text-2xl font-bold text-emerald-400 mr-2">0</span>
+                        <span class="text-xs text-slate-500 font-bold">Pcs</span>
+                        <span class="text-[10px] text-slate-600 ml-2">(Basis 1kg: <span id="baseYieldDisplay">130</span>)</span>
+                    </div>
+                </div>
+
+                <!-- Card 2 -->
+                <div class="bg-slate-800/50 p-3 rounded-lg border border-slate-700 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-3 opacity-10">
+                        <i class="fas fa-wallet text-4xl text-blue-400"></i>
+                    </div>
+                    <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Total Modal Harian</p>
+                    <h2 class="text-2xl font-bold text-slate-200 mono mt-1" id="displayTotalCost">Rp 0</h2>
+                </div>
+
+                <!-- Card 3 -->
+                <div class="bg-gradient-to-br from-indigo-900/80 to-slate-900 p-3 rounded-lg border border-indigo-500/30 relative overflow-hidden shadow-lg shadow-indigo-900/10">
+                    <div class="absolute top-0 right-0 p-3 opacity-20">
+                        <i class="fas fa-tag text-4xl text-indigo-300"></i>
+                    </div>
+                    <p class="text-[10px] text-indigo-300 uppercase tracking-wider font-semibold">HPP Per Pcs</p>
+                    <h2 class="text-3xl font-bold text-white mono mt-0 leading-tight" id="displayHppPcs">Rp 0</h2>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONTENT GRID -->
+        <div class="flex-1 lg:overflow-hidden lg:min-h-0 w-full">
+            <div class="grid grid-cols-1 lg:grid-cols-12 h-full">
+                
+                <!-- LEFT COLUMN: INGREDIENTS -->
+                <div class="lg:col-span-8 flex flex-col h-auto lg:h-full lg:min-h-0 bg-slate-800/30 border-r border-slate-800 relative">
+                    <div class="flex-none flex justify-between items-center px-4 py-3 bg-slate-900/80 border-b border-slate-800 sticky lg:static top-[200px] z-10 backdrop-blur-md">
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider"><i class="fas fa-layer-group mr-2 text-indigo-400"></i>Bahan Baku (Sesuai Skala)</h3>
+                        <button onclick="openModal('new')" class="text-xs bg-slate-700 hover:bg-indigo-600 hover:text-white text-slate-300 px-3 py-1.5 rounded transition-all flex items-center gap-1 border border-slate-600 hover:border-indigo-500">
+                            <i class="fas fa-plus"></i> Tambah
+                        </button>
+                    </div>
+                    
+                    <div class="h-auto lg:flex-1 lg:overflow-y-auto p-0 scroll-smooth custom-scrollbar">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-900 text-[10px] uppercase text-slate-500 font-bold sticky top-0 z-10 shadow-sm">
+                                <tr>
+                                    <th class="px-4 py-2 w-[40%]">Bahan</th>
+                                    <th class="px-2 py-2 text-right w-[25%]">Takaran</th>
+                                    <th class="px-4 py-2 text-right w-[25%]">Biaya</th>
+                                    <th class="px-2 py-2 text-center w-[10%]">Edit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="listContainer" class="divide-y divide-slate-800 text-sm">
+                                <!-- JS renders rows here -->
+                            </tbody>
+                        </table>
+                        <div class="h-10 lg:h-20"></div>
+                    </div>
+                </div>
+
+                <!-- RIGHT COLUMN: OPS COSTS & STEPS -->
+                <div class="lg:col-span-4 flex flex-col h-auto lg:h-full lg:min-h-0 bg-slate-950 border-t lg:border-t-0 border-slate-800 relative">
+                    <div class="flex-none flex justify-between items-center px-4 py-3 bg-slate-900/80 border-b border-slate-800 sticky lg:static top-0 z-10 backdrop-blur-md">
+                        <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider"><i class="fas fa-bolt mr-2 text-orange-400"></i>Biaya Harian (Tetap)</h3>
+                        <h3 class="text-xs font-bold text-orange-400 mono" id="displayOpsTotal">Rp 0</h3>
+                    </div>
+
+                    <div class="p-4 flex-1 h-auto lg:overflow-y-auto custom-scrollbar">
+                        <!-- Biaya Lain Section -->
+                        <div class="flex gap-1 mb-4 p-1 bg-slate-800 rounded border border-slate-700 focus-within:border-orange-500/50 transition-colors">
+                            <input type="text" id="newOpsName" placeholder="Ket (Mis: Gas)" class="bg-transparent text-white text-xs px-2 py-1.5 w-full outline-none placeholder-slate-600">
+                            <div class="w-px bg-slate-700 my-1"></div>
+                            <input type="number" id="newOpsCost" placeholder="Rp" class="bg-transparent text-white text-xs px-2 py-1.5 w-20 text-right outline-none placeholder-slate-600">
+                            <button id="btnAddOps" class="bg-orange-600 hover:bg-orange-500 text-white px-3 rounded-sm text-xs font-bold hover:shadow-lg transition-all"><i class="fas fa-plus"></i></button>
+                        </div>
+
+                        <div id="opsContainer" class="space-y-2 mb-8">
+                            <!-- Ops rows -->
+                        </div>
+
+                        <!-- SEPARATOR -->
+                        <div class="border-t border-slate-800 pt-4 mb-2">
+                             <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3"><i class="fas fa-list-ol mr-2 text-indigo-400"></i>Catatan / Langkah</h3>
+                             <div class="mb-3">
+                                 <div class="relative">
+                                    <textarea id="newStepText" placeholder="Tulis langkah... (Tekan Ctrl+Enter untuk tambah)" class="w-full bg-slate-800 border border-slate-700 rounded-lg p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors resize-none h-20"></textarea>
+                                    <button id="btnAddStep" class="absolute bottom-2 right-2 bg-indigo-600 hover:bg-indigo-500 text-white p-1.5 rounded-md text-xs transition-colors shadow-lg">
+                                        <i class="fas fa-paper-plane"></i>
+                                    </button>
+                                 </div>
+                                 <p class="text-[10px] text-slate-500 mt-1 text-right">Tekan <span class="text-indigo-400 font-bold">Ctrl + Enter</span> untuk menyimpan</p>
+                             </div>
+                             <ul id="stepsContainer" class="space-y-2 text-sm text-slate-300 list-none pl-0"></ul>
+                             <div class="h-10"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-none p-4 bg-slate-900 border-t border-slate-800 text-[10px] text-slate-600 text-center flex flex-col gap-1">
+                        <span>Aplikasi Kalkulator HPP Pukis Pro</span>
+                        <span class="text-slate-700">Versi Modular 1.1 • Fix Input Modal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL FORM -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/80 hidden backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 w-full max-w-sm rounded-xl shadow-2xl border border-slate-700 transform transition-all scale-100">
+            <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-800/50 rounded-t-xl">
+                <h3 class="font-bold text-white text-sm">Edit Data Bahan Dasar (1 Kg)</h3>
+                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
+            
+            <div class="p-5 space-y-3">
+                <input type="hidden" id="editIndex">
+                <div>
+                    <label class="block text-[10px] text-slate-400 mb-1 uppercase font-bold">Kategori</label>
+                    <select id="modalCategory" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-xs text-white focus:border-indigo-500 focus:outline-none">
+                        <option value="Bahan Utama">Bahan Utama</option>
+                        <option value="Bahan Tambahan">Bahan Tambahan</option>
+                        <option value="Topping">Topping</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="col-span-2">
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase font-bold">Nama Bahan</label>
+                        <input type="text" id="modalName" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase font-bold">Merk</label>
+                        <input type="text" id="modalBrand" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase font-bold">Harga Beli (Rp)</label>
+                        <input type="number" id="modalPrice" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-slate-400 mb-1 uppercase font-bold">Kemasan (Gr/Ml)</label>
+                        <input type="number" id="modalWeight" class="w-full bg-slate-800 border border-slate-700 rounded p-2 text-sm text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div class="col-span-2 bg-slate-800/50 p-2 rounded border border-slate-700">
+                         <label class="block text-[10px] text-emerald-400 mb-1 uppercase font-bold">Takaran Basis 1 Resep</label>
+                         <div class="flex gap-2 items-center">
+                            <input type="number" id="modalUsage" placeholder="0" class="flex-1 bg-slate-900 border border-slate-600 rounded p-2 text-sm text-white focus:border-emerald-500 focus:outline-none font-bold">
+                            <span class="text-[10px] text-slate-500 w-16">Gr / Btr / Pcs</span>
+                         </div>
+                    </div>
+                </div>
+                <div class="bg-indigo-900/20 p-2 rounded border border-indigo-500/20 text-[10px] text-indigo-300 flex justify-between items-center">
+                    <span><i class="fas fa-info-circle mr-1"></i> Harga Modal:</span>
+                    <span id="modalCalc" class="font-bold font-mono">Rp 0 / unit</span>
+                </div>
+            </div>
+
+            <div class="p-4 border-t border-slate-800 flex justify-end gap-2 bg-slate-800/30 rounded-b-xl">
+                <button id="btnDelete" class="bg-red-500/10 hover:bg-red-500/20 text-red-500 px-3 py-1.5 rounded text-xs font-medium mr-auto hidden border border-red-500/20">Hapus</button>
+                <button onclick="document.getElementById('modalOverlay').classList.add('hidden')" class="text-slate-400 hover:text-white px-3 py-1.5 text-xs">Batal</button>
+                <button id="btnSaveModal" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded text-xs font-bold shadow-lg shadow-indigo-500/20">Simpan Data</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Link to Logic Script -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
