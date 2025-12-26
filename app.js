@@ -235,7 +235,7 @@ function renderSteps() {
     
     steps.forEach((step, idx) => {
         container.innerHTML += `
-            <li class="flex gap-2 group p-2 rounded bg-slate-800/20 border border-transparent hover:border-slate-700 transition-all items-start"
+            <li class="flex gap-2 group p-2 rounded bg-slate-800/20 border border-transparent transition-all items-start mb-1"
                 draggable="true"
                 data-index="${idx}"
                 ondragstart="window.handleDragStart(event)"
@@ -243,32 +243,37 @@ function renderSteps() {
                 ondrop="window.handleDrop(event)"
                 ondragenter="window.handleDragEnter(event)"
                 ondragleave="window.handleDragLeave(event)"
+                ondragend="window.handleDragEnd(event)" 
             >
-                <div class="cursor-move text-slate-600 hover:text-indigo-400 mt-2 p-1">
+                <div class="cursor-move text-slate-600 hover:text-indigo-400 mt-1 p-1 flex-none pointer-events-none">
                     <i class="fas fa-grip-vertical text-xs"></i>
                 </div>
 
-                <span class="font-mono text-slate-500 text-xs mt-2.5 select-none">${idx + 1}.</span>
+                <span class="font-mono text-slate-500 text-xs mt-1.5 select-none flex-none w-4 pointer-events-none">${idx + 1}.</span>
                 
                 <textarea 
-                    class="flex-1 bg-transparent text-xs leading-relaxed text-slate-300 outline-none border-b border-transparent focus:border-indigo-500 transition-colors resize-none overflow-hidden"
+                    id="step-area-${idx}"
+                    class="flex-1 w-full bg-transparent text-xs leading-relaxed text-slate-300 placeholder-slate-600 outline-none border-none focus:ring-0 resize-none overflow-hidden py-1 px-1 rounded focus:bg-slate-800/50 transition-colors"
                     rows="1"
-                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'; window.updateStepText(${idx}, this.value)"
+                    placeholder="Isi langkah..."
+                    oninput="window.autoResizeTextarea(this); window.updateStepText(${idx}, this.value)"
                 >${step}</textarea>
 
-                <button onclick="window.removeStep(${idx})" class="text-slate-600 hover:text-red-500 self-start mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button onclick="window.removeStep(${idx})" class="text-slate-600 hover:text-red-500 self-start mt-1 opacity-0 group-hover:opacity-100 transition-opacity flex-none">
                     <i class="fas fa-times text-xs"></i>
                 </button>
             </li>
         `;
     });
 
-    // Auto-resize textarea heights after render
-    container.querySelectorAll('textarea').forEach(tx => {
-        tx.style.height = 'auto';
-        tx.style.height = (tx.scrollHeight) + 'px';
-    });
+    // Auto-resize setelah render
+    setTimeout(() => {
+        container.querySelectorAll('textarea').forEach(tx => {
+            window.autoResizeTextarea(tx);
+        });
+    }, 0);
 }
+
 
 function renderSummary() {
     // 1. Yield & Cost
@@ -459,6 +464,8 @@ document.getElementById('btnExportCsv').addEventListener('click', () => {
     link.click();
 });
 
+document.addEventListener('DOMContentLoaded', init);
+
 /* --- TAMBAHAN LOGIC EDIT & DRAG DROP --- */
 
 // 1. Logic Update Text saat diketik
@@ -468,14 +475,25 @@ window.updateStepText = function(idx, value) {
     // Kita TIDAK memanggil render() di sini agar kursor tidak lepas fokus saat mengetik
 };
 
-// 2. Logic Drag & Drop
+/* --- LOGIC DRAG & DROP YANG SUDAH DIPERBAIKI --- */
 let dragSrcEl = null;
 
+// Helper untuk membersihkan semua style sisa drag
+function resetDragStyles() {
+    document.querySelectorAll('#stepsContainer li').forEach(li => {
+        li.classList.remove('opacity-50', 'border-indigo-500', 'bg-slate-700/50', 'scale-[0.98]');
+    });
+}
+
 window.handleDragStart = function(e) {
-    dragSrcEl = e.target.closest('li'); // Elemen yang sedang diseret
+    dragSrcEl = e.target.closest('li'); 
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', dragSrcEl.innerHTML);
-    dragSrcEl.classList.add('opacity-50', 'border-indigo-500'); // Efek visual saat diangkat
+    
+    // Beri sedikit delay agar elemen yang didrag terlihat transparan, tapi ghost imagenya tetap utuh
+    setTimeout(() => {
+        if(dragSrcEl) dragSrcEl.classList.add('opacity-50', 'border-indigo-500', 'scale-[0.98]');
+    }, 0);
 };
 
 window.handleDragOver = function(e) {
@@ -495,7 +513,11 @@ window.handleDragEnter = function(e) {
 
 window.handleDragLeave = function(e) {
     const targetLi = e.target.closest('li');
-    if (targetLi) {
+    
+    // LOGIC BARU: Cek apakah mouse benar-benar keluar dari kotak Li, 
+    // atau hanya masuk ke elemen anak (textarea/icon) di dalamnya.
+    // Jika 'relatedTarget' (elemen tujuan mouse) masih ada di dalam 'targetLi', jangan hapus class.
+    if (targetLi && !targetLi.contains(e.relatedTarget)) {
         targetLi.classList.remove('bg-slate-700/50');
     }
 };
@@ -507,20 +529,35 @@ window.handleDrop = function(e) {
 
     const targetLi = e.target.closest('li');
     
-    // Pastikan drop valid dan bukan ke dirinya sendiri
-    if (dragSrcEl !== targetLi && targetLi) {
+    // Pastikan valid dan posisi berubah
+    if (dragSrcEl && targetLi && dragSrcEl !== targetLi) {
         const oldIndex = parseInt(dragSrcEl.getAttribute('data-index'));
         const newIndex = parseInt(targetLi.getAttribute('data-index'));
 
-        // Pindahkan item di dalam Array
+        // Tukar posisi data
         const itemMoved = steps.splice(oldIndex, 1)[0];
         steps.splice(newIndex, 0, itemMoved);
 
         saveToLocal();
-        render(); // Render ulang untuk memperbarui nomor urut
+        render(); 
     }
-    
     return false;
 };
 
-document.addEventListener('DOMContentLoaded', init);
+// FUNGSI BARU: Dipanggil saat drag selesai (baik sukses di-drop atau dilepas sembarangan)
+window.handleDragEnd = function(e) {
+    dragSrcEl = null;
+    resetDragStyles(); // Hapus semua warna gelap/border yang nyangkut
+};
+
+// Helper Textarea Resize
+window.autoResizeTextarea = function(element) {
+    element.style.height = 'auto';
+    element.style.height = (element.scrollHeight) + 'px';
+};
+
+// Tambahkan Helper Function ini di bagian bawah app.js (agar lebih rapi)
+window.autoResizeTextarea = function(element) {
+    element.style.height = 'auto'; // Reset dulu
+    element.style.height = (element.scrollHeight + 2) + 'px'; // Set sesuai konten + buffer 2px
+};
