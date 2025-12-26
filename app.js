@@ -212,7 +212,7 @@ function renderOps() {
     document.getElementById('displayOpsTotal').innerText = toIDR(total);
     window.tempTotalOpsCost = total;
 }
-
+/* 
 function renderSteps() {
     const container = document.getElementById('stepsContainer');
     container.innerHTML = '';
@@ -226,6 +226,47 @@ function renderSteps() {
                 </button>
             </li>
         `;
+    });
+} */
+/* --- GANTI FUNCTION renderSteps YANG LAMA DENGAN INI --- */
+function renderSteps() {
+    const container = document.getElementById('stepsContainer');
+    container.innerHTML = '';
+    
+    steps.forEach((step, idx) => {
+        container.innerHTML += `
+            <li class="flex gap-2 group p-2 rounded bg-slate-800/20 border border-transparent hover:border-slate-700 transition-all items-start"
+                draggable="true"
+                data-index="${idx}"
+                ondragstart="window.handleDragStart(event)"
+                ondragover="window.handleDragOver(event)"
+                ondrop="window.handleDrop(event)"
+                ondragenter="window.handleDragEnter(event)"
+                ondragleave="window.handleDragLeave(event)"
+            >
+                <div class="cursor-move text-slate-600 hover:text-indigo-400 mt-2 p-1">
+                    <i class="fas fa-grip-vertical text-xs"></i>
+                </div>
+
+                <span class="font-mono text-slate-500 text-xs mt-2.5 select-none">${idx + 1}.</span>
+                
+                <textarea 
+                    class="flex-1 bg-transparent text-xs leading-relaxed text-slate-300 outline-none border-b border-transparent focus:border-indigo-500 transition-colors resize-none overflow-hidden"
+                    rows="1"
+                    oninput="this.style.height = ''; this.style.height = this.scrollHeight + 'px'; window.updateStepText(${idx}, this.value)"
+                >${step}</textarea>
+
+                <button onclick="window.removeStep(${idx})" class="text-slate-600 hover:text-red-500 self-start mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </li>
+        `;
+    });
+
+    // Auto-resize textarea heights after render
+    container.querySelectorAll('textarea').forEach(tx => {
+        tx.style.height = 'auto';
+        tx.style.height = (tx.scrollHeight) + 'px';
     });
 }
 
@@ -417,5 +458,69 @@ document.getElementById('btnExportCsv').addEventListener('click', () => {
     document.body.appendChild(link);
     link.click();
 });
+
+/* --- TAMBAHAN LOGIC EDIT & DRAG DROP --- */
+
+// 1. Logic Update Text saat diketik
+window.updateStepText = function(idx, value) {
+    steps[idx] = value;
+    saveToLocal(); // Simpan ke localStorage agar tidak hilang saat refresh
+    // Kita TIDAK memanggil render() di sini agar kursor tidak lepas fokus saat mengetik
+};
+
+// 2. Logic Drag & Drop
+let dragSrcEl = null;
+
+window.handleDragStart = function(e) {
+    dragSrcEl = e.target.closest('li'); // Elemen yang sedang diseret
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', dragSrcEl.innerHTML);
+    dragSrcEl.classList.add('opacity-50', 'border-indigo-500'); // Efek visual saat diangkat
+};
+
+window.handleDragOver = function(e) {
+    if (e.preventDefault) {
+        e.preventDefault(); // Wajib agar bisa di-drop
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+};
+
+window.handleDragEnter = function(e) {
+    const targetLi = e.target.closest('li');
+    if (targetLi && targetLi !== dragSrcEl) {
+        targetLi.classList.add('bg-slate-700/50'); // Highlight target drop
+    }
+};
+
+window.handleDragLeave = function(e) {
+    const targetLi = e.target.closest('li');
+    if (targetLi) {
+        targetLi.classList.remove('bg-slate-700/50');
+    }
+};
+
+window.handleDrop = function(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+
+    const targetLi = e.target.closest('li');
+    
+    // Pastikan drop valid dan bukan ke dirinya sendiri
+    if (dragSrcEl !== targetLi && targetLi) {
+        const oldIndex = parseInt(dragSrcEl.getAttribute('data-index'));
+        const newIndex = parseInt(targetLi.getAttribute('data-index'));
+
+        // Pindahkan item di dalam Array
+        const itemMoved = steps.splice(oldIndex, 1)[0];
+        steps.splice(newIndex, 0, itemMoved);
+
+        saveToLocal();
+        render(); // Render ulang untuk memperbarui nomor urut
+    }
+    
+    return false;
+};
 
 document.addEventListener('DOMContentLoaded', init);
